@@ -49,9 +49,7 @@ void run_in_v8(const char* code) {
 //     std::cout << "Result: " << code << "\n";
 // }
 
-using namespace boost::python;
-
 BOOST_PYTHON_MODULE(runjs)
 {
-    def("run", run_in_v8);
+    boost::python::def("run", run_in_v8);
 }
