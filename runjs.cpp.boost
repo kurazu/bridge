@@ -1,6 +1,7 @@
 #include <iostream>
 #include <include/v8.h>
 #include <include/libplatform/libplatform.h>
+#include <boost/python.hpp>
 
 using namespace v8;
 
@@ -25,7 +26,7 @@ void run_in_v8(const char* code) {
     Context::Scope context_scope(context);
 
     // Create a string containing the JavaScript source code.
-    Local<String> source = String::NewFromUtf8(isolate, "'Hello' + ', World!'");
+    Local<String> source = String::NewFromUtf8(isolate, code);
 
     // Compile the source code.
     Local<Script> script = Script::Compile(source);
@@ -35,7 +36,7 @@ void run_in_v8(const char* code) {
 
     // Convert the result to an UTF8 string and print it.
     String::Utf8Value utf8(result);
-    printf("%s\n", *utf8);
+    std::cout << "Result: " << *utf8 << "\n";
   }
 
   // Dispose the isolate and tear down V8.
@@ -43,38 +44,12 @@ void run_in_v8(const char* code) {
   V8::Dispose();
   V8::ShutdownPlatform();
   delete platform;
-
 }
+// void run_in_v8(const char* code) {
+//     std::cout << "Result: " << code << "\n";
+// }
 
-
-extern "C" {
-
-#include <Python.h>
-
-static PyObject *
-runjs_run(PyObject *self, PyObject *args)
+BOOST_PYTHON_MODULE(runjs)
 {
-    return run_in_v8("2 + 3");
-}
-
-static PyMethodDef RunjsMethods[] = {
-    {"run",  runjs_run, METH_VARARGS, "Execute JavaScript."},
-    {NULL, NULL, 0, NULL} /* Sentinel */
-};
-
-static struct PyModuleDef runjsmodule = {
-   PyModuleDef_HEAD_INIT,
-   "runjs", /* name of module */
-   "Module for executing JavaScript", /* module documentation, may be NULL */
-   -1, /* size of per-interpreter state of the module,
-          or -1 if the module keeps state in global variables. */
-   RunjsMethods
-};
-
-PyMODINIT_FUNC
-PyInit_runjs(void)
-{
-    return PyModule_Create(&runjsmodule);
-}
-
+    boost::python::def("run", run_in_v8);
 }
