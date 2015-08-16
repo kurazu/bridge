@@ -15,3 +15,6 @@ simple:
 
 dwa:
 	g++ helloworld.cpp -o helloworld -I/home/kurazu/apps/v8 -Wl,--start-group /home/kurazu/apps/v8/out/native/obj.target/{tools/gyp/libv8_{base,libbase,nosnapshot,libplatform},third_party/icu/libicu{uc,i18n,data}}.a -Wl,--end-group -lrt -pthread -std=c++0x
+
+runsm: build
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3 -c "import runjs; runjs.run('2'+'3')"
