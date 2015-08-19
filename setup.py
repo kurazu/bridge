@@ -5,14 +5,14 @@ runjs = Extension(
     'runjs',
     sources=['runjs_sm.cpp'],
     include_dirs=[
-        '/home/kurazu/apps/spider_monkey/include/mozjs-43a1'
+        '/home/kurazu/apps/spider_monkey/include/mozjs-'
     ],
     # include_dirs=[
     #     '/usr/include',
     #     #'/home/kurazu/apps/v8',
     #     #'/home/kurazu/apps/boost/include'
     # ],
-    libraries=['mozjs-43a1', 'm', 'dl'],
+    libraries=['mozjs-', 'm', 'dl'],
     library_dirs=[
         '/home/kurazu/apps/spider_monkey/lib'
     ],
@@ -20,7 +20,7 @@ runjs = Extension(
     #     '/home/kurazu/apps/v8/out/native/lib.target',
     # ],
     # extra_compile_args=['-std=c++0x'],
-    extra_compile_args=['-std=gnu++0x', '-include', '/home/kurazu/apps/spider_monkey/include/mozjs-43a1/js/RequiredDefines.h'],
+    extra_compile_args=['-std=gnu++0x', '-include', '/home/kurazu/apps/spider_monkey/include/mozjs-/js/RequiredDefines.h'],
     # extra_objects=[
     #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_base.a',
     #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_libbase.a',
