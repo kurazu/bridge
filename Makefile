@@ -18,3 +18,6 @@ dwa:
 
 runsm: build
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3 -c "import runjs; runjs.run('2'+'3')"
+
+shell:
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3

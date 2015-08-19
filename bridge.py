@@ -27,7 +27,7 @@ def js_func(func):
     assert arg_spec.keywords is None
     arg_names = arg_spec.args
 
-    compiled_function = runjs.compile(name, arg_names, content)
+    compiled_function = runjs.JSFunc(name, arg_names, content)
 
     def js_func_wrapper(*args, **kwargs):
         args = inspect.getcallargs(func, *args, **kwargs)

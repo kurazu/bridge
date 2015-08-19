@@ -88,19 +88,121 @@ int run_in_v8(const char* script)
 extern "C" {
 
 #include <Python.h>
+#include <structmember.h>
 
-static PyObject *
-runjs_run(PyObject *self, PyObject *args)
+typedef struct {
+    PyObject_HEAD
+    /* Type-specific fields go here. */
+    JSFunction *js_func;
+} JSFunc;
+
+static void
+JSFunc_dealloc(JSFunc* self)
 {
-    printf("inside run 1\n");
-    int status = run_in_v8("'2' + '3'");
-    printf("inside run 2\n");
-    return PyLong_FromLong(status);
+    delete self->js_func;
+    self->js_func = nullptr;
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-static PyMethodDef RunjsMethods[] = {
-    {"run",  runjs_run, METH_VARARGS, "Execute JavaScript."},
-    {NULL, NULL, 0, NULL} /* Sentinel */
+static PyObject *
+JSFunc_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    JSFunc *self;
+
+    self = (JSFunc *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->js_func = nullptr;
+    }
+
+    return (PyObject *)self;
+}
+
+static int
+JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds)
+{
+    // PyObject *first=NULL, *last=NULL, *tmp;
+
+    // static char *kwlist[] = {"first", "last", "number", NULL};
+
+    // if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist,
+    //                                   &first, &last,
+    //                                   &self->number))
+    //     return -1;
+
+    // if (first) {
+    //     tmp = self->first;
+    //     Py_INCREF(first);
+    //     self->first = first;
+    //     Py_XDECREF(tmp);
+    // }
+
+    // if (last) {
+    //     tmp = self->last;
+    //     Py_INCREF(last);
+    //     self->last = last;
+    //     Py_XDECREF(tmp);
+    // }
+
+    return 0;
+}
+
+
+static PyMemberDef JSFunc_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyObject *
+JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
+{
+    JSFunc * self = (JSFunc*) _self;
+    PyObject *result;
+    result = PyUnicode_FromString("");
+    return result;
+}
+
+static PyMethodDef JSFunc_methods[] = {
+    {NULL}  /* Sentinel */
+};
+
+static PyTypeObject JSFuncType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "runjs.JSFunc",            /* tp_name */
+    sizeof(JSFunc),/* tp_basicsize */
+    0,                         /* tp_itemsize */
+    (destructor)JSFunc_dealloc,/* tp_dealloc */
+    0,                         /* tp_print */
+    0,                         /* tp_getattr */
+    0,                         /* tp_setattr */
+    0,                         /* tp_reserved */
+    0,                         /* tp_repr */
+    0,                         /* tp_as_number */
+    0,                         /* tp_as_sequence */
+    0,                         /* tp_as_mapping */
+    0,                         /* tp_hash  */
+    JSFunc_call,               /* tp_call */
+    0,                         /* tp_str */
+    0,                         /* tp_getattro */
+    0,                         /* tp_setattro */
+    0,                         /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
+    "JavaScript function",     /* tp_doc */
+    0,                         /* tp_traverse */
+    0,                         /* tp_clear */
+    0,                         /* tp_richcompare */
+    0,                         /* tp_weaklistoffset */
+    0,                         /* tp_iter */
+    0,                         /* tp_iternext */
+    JSFunc_methods,            /* tp_methods */
+    JSFunc_members,            /* tp_members */
+    0,                         /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)JSFunc_init,     /* tp_init */
+    0,                         /* tp_alloc */
+    JSFunc_new,                /* tp_new */
 };
 
 static struct PyModuleDef runjsmodule = {
@@ -109,13 +211,27 @@ static struct PyModuleDef runjsmodule = {
    "Module for executing JavaScript", /* module documentation, may be NULL */
    -1, /* size of per-interpreter state of the module,
           or -1 if the module keeps state in global variables. */
-   RunjsMethods
+   NULL, NULL, NULL, NULL, NULL
 };
 
 PyMODINIT_FUNC
 PyInit_runjs(void)
 {
-    return PyModule_Create(&runjsmodule);
+    PyObject* module;
+
+    JSFuncType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&JSFuncType) < 0) {
+        return NULL;
+    }
+
+    module = PyModule_Create(&runjsmodule);
+    if (module == NULL) {
+        return NULL;
+    }
+
+    Py_INCREF(&JSFuncType);
+    PyModule_AddObject(module, "JSFunc", (PyObject *)&JSFuncType);
+    return module;
 }
 
 }
