@@ -13,6 +13,12 @@ static JSClass global_class = {
     // [SpiderMonkey 38] Following Stubs are removed. Remove those lines.
 };
 
+typedef struct {
+    JSRuntime * runtime;
+    JSContext * context;
+    JS::RootedObject global;
+} RunJSModuleState;
+
 int run_in_v8(const char* script)
 {
     printf("inside run_in_v8 1\n");
@@ -205,12 +211,6 @@ static PyTypeObject JSFuncType = {
     JSFunc_new,                /* tp_new */
 };
 
-typedef struct {
-    JSRuntime * runtime;
-    JSContext * context;
-    JS::RootedObject global;
-} RunJSModuleState;
-
 static struct PyModuleDef runjsmodule = {
    PyModuleDef_HEAD_INIT,
    "runjs", /* name of module */
@@ -234,33 +234,43 @@ PyInit_runjs(void)
         return NULL;
     }
 
+    printf("1\n");
     module = PyModule_Create(&runjsmodule);
     if (module == NULL) {
         return NULL;
     }
-
+    printf("2\n");
     RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+    printf("3\n");
+
+    printf("0\n");
+    JS_Init();
+    printf("0.5\n");
 
     JSRuntime * runtime = JS_NewRuntime(8L * 1024 * 1024);
+    printf("4\n");
     if (!runtime) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create JS runtime");
         return NULL;
     }
-    (*module_state).runtime = runtime;
+    printf("5\n");
+    module_state->runtime = runtime;
+    printf("6\n");
 
     JSContext * context = JS_NewContext(runtime, 8192);
     if (!context) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create JS context");
         return NULL;
     }
-    (*module_state).context = context;
+    module_state->context = context;
 
     JS::RootedObject global(context, JS_NewGlobalObject(context, &global_class, nullptr, JS::FireOnNewGlobalHook));
     if (!global) {
         PyErr_SetString(PyExc_RuntimeError, "Failed to create JS global object");
         return NULL;
     }
-    (*module_state).global = global;
+    module_state->global = global;
+    printf("initialized sm\n");
 
     Py_INCREF(&JSFuncType);
     PyModule_AddObject(module, "JSFunc", (PyObject *)&JSFuncType);
