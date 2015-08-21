@@ -205,13 +205,23 @@ static PyTypeObject JSFuncType = {
     JSFunc_new,                /* tp_new */
 };
 
+typedef struct {
+    JSRuntime * runtime;
+    JSContext * context;
+    JS::RootedObject global;
+} RunJSModuleState;
+
 static struct PyModuleDef runjsmodule = {
    PyModuleDef_HEAD_INIT,
    "runjs", /* name of module */
    "Module for executing JavaScript", /* module documentation, may be NULL */
-   -1, /* size of per-interpreter state of the module,
+   sizeof(RunJSModuleState), /* size of per-interpreter state of the module,
           or -1 if the module keeps state in global variables. */
-   NULL, NULL, NULL, NULL, NULL
+   NULL, /* m_methods */
+   NULL, /* m_reload */
+   NULL, /* m_traverse */
+   NULL, /* m_clear */
+   NULL, /* m_free */
 };
 
 PyMODINIT_FUNC
@@ -228,6 +238,29 @@ PyInit_runjs(void)
     if (module == NULL) {
         return NULL;
     }
+
+    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+
+    JSRuntime * runtime = JS_NewRuntime(8L * 1024 * 1024);
+    if (!runtime) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create JS runtime");
+        return NULL;
+    }
+    (*module_state).runtime = runtime;
+
+    JSContext * context = JS_NewContext(runtime, 8192);
+    if (!context) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create JS context");
+        return NULL;
+    }
+    (*module_state).context = context;
+
+    JS::RootedObject global(context, JS_NewGlobalObject(context, &global_class, nullptr, JS::FireOnNewGlobalHook));
+    if (!global) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to create JS global object");
+        return NULL;
+    }
+    (*module_state).global = global;
 
     Py_INCREF(&JSFuncType);
     PyModule_AddObject(module, "JSFunc", (PyObject *)&JSFuncType);
