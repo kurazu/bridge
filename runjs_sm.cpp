@@ -5,6 +5,7 @@
 // #define __STDC_LIMIT_MACROS
 // #include <stdint.h>
 #include "jsapi.h"
+#include <string>
 
 /* The class of the global object. */
 static JSClass global_class = {
@@ -226,6 +227,7 @@ void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
 static PyObject *
 JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
 {
+    const char * input_arguments = "[2, 3]";
     printf("CALL\n");
     JSFunc * self = (JSFunc*) _self;
 
@@ -242,13 +244,78 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
     JS::Value arguments[2];
     arguments[0] = INT_TO_JSVAL(2);
     arguments[1] = INT_TO_JSVAL(3);
-    JS::AutoValueVector argv(module_state->context);
-    argv.append(INT_TO_JSVAL(2));
-    argv.append(INT_TO_JSVAL(3));
+
+
     bool ok;
+    JS::RootedValue json(module_state->context);
+    printf("CALL 7\n");
+    ok = JS_GetProperty(module_state->context, module_state->global, "JSON", &json);
+    printf("CALL 8\n");
+    if (!ok) {
+        printf("CALL 9\n");
+        PyErr_SetString(PyExc_RuntimeError, "Get JSON failed");
+        return NULL;
+    }
+    printf("CALL 10\n");
+    JS::RootedObject json_object(module_state->context, &json.toObject());
+    printf("CALL 10a\n");
+
+    JS::RootedString input_str(module_state->context);
+    printf("CALL 10aa\n");
+    {
+        JSAutoCompartment ac4(module_state->context, module_state->global);
+        JSString * z = JS_NewStringCopyZ(module_state->context, input_arguments);
+        printf("CALL 10aaa\n");
+        input_str = z;
+        printf("CALL 10b\n");
+    }
+    JS::RootedValue input_value(module_state->context, STRING_TO_JSVAL(input_str));
+    printf("CALL 10c\n");
+    JS::AutoValueVector parse_args(module_state->context);
+    printf("CALL 10d\n");
+    parse_args.append(input_value);
+    printf("CALL 10e\n");
+    JS::RootedValue parse_result(module_state->context);
+    printf("CALL 10f\n");
+    {
+        JSAutoCompartment ac3(module_state->context, module_state->global);
+        printf("CALL 10g\n");
+        ok = JS_CallFunctionName(module_state->context, json_object, "parse", parse_args, &parse_result);
+        printf("CALL 10h\n");
+    }
+    if (!ok) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to parse arguments");
+        return NULL;
+    }
+    printf("CALL 10i\n");
 
     {
         JSAutoCompartment ac(module_state->context, module_state->global);
+        JS::RootedObject parse_object(module_state->context, &parse_result.toObject());
+        printf("CALL 10j\n");
+
+        JS::AutoValueVector argv(module_state->context);
+        printf("CALL 10k\n");
+        for (int i = 0; i < 2; i++) {
+            printf("CALL 10k %d\n", i);
+            JS::RootedValue argument(module_state->context);
+            printf("CALL 10l\n");
+            std::string prop_name = std::to_string(i);
+            printf("CALL 10m\n");
+            const char * prop_name_cstr = prop_name.c_str();
+            printf("CALL 10n\n");
+            ok = JS_GetProperty(module_state->context, parse_object, prop_name_cstr, &argument);
+            printf("CALL 10o\n");
+            if (!ok) {
+                printf("CALL 10p\n");
+                PyErr_SetString(PyExc_RuntimeError, "Failed to get argument");
+                return NULL;
+            }
+            printf("CALL 10q\n");
+            argv.append(argument);
+            printf("CALL 10r\n");
+        }
+        printf("CALL 10s\n");
         ok = JS_CallFunction(
             module_state->context, JS::NullPtr(), self->js_func,
             argv, &rval
@@ -261,17 +328,7 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
         return NULL;
     }
     printf("CALL 6\n");
-    JS::RootedValue json(module_state->context);
-    printf("CALL 7\n");
-    ok = JS_GetProperty(module_state->context, module_state->global, "JSON", &json);
-    printf("CALL 8\n");
-    if (!ok) {
-        printf("CALL 9\n");
-        PyErr_SetString(PyExc_RuntimeError, "Get JSON failed");
-        return NULL;
-    }
-    printf("CALL 10\n");
-    JS::RootedObject json_object(module_state->context, &json.toObject());
+
     printf("CALL 11\n");
     JS::AutoValueVector stringify_args(module_state->context);
     printf("CALL 12\n");
@@ -302,6 +359,7 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
     printf("CALL 21\n");
     PyObject *result;
     result = PyUnicode_FromString(result_string);
+    delete result_string;
     printf("CALL END\n");
     return result;
 }
