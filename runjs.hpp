@@ -4,12 +4,19 @@
 #include "jsapi.h"
 #include <Python.h>
 #include <structmember.h>
+#include <string>
 
 /* The class of the global object. */
 static JSClass global_class = {
     "global",
     JSCLASS_GLOBAL_FLAGS
 };
+
+typedef struct {
+    JSRuntime * runtime;
+    JSContext * context;
+    JS::RootedObject global;
+} RunJSModuleState;
 
 /* The name of the module */
 static const char * runjs_module_name = "runjs";
@@ -55,6 +62,11 @@ static PyMethodDef JSFunc_methods[] = {
     {NULL}  /* Sentinel */
 };
 
+/* Members of JSFunc */
+static PyMemberDef JSFunc_members[] = {
+    {NULL}  /* Sentinel */
+};
+
 /* Definition of the JSFunc type. */
 static PyTypeObject JSFuncType = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -97,20 +109,8 @@ static PyTypeObject JSFuncType = {
     JSFunc_new,                /* tp_new */
 };
 
-/* Members of the module */
-static PyMemberDef JSFunc_members[] = {
-    {NULL}  /* Sentinel */
-};
-
 /* Called when module if unloaded. */
 static void runjs_free(void * module_obj);
-
-/* Module-level state structure that will hold SpiderMonkey variables. */
-typedef struct {
-    JSRuntime * runtime;
-    JSContext * context;
-    JS::RootedObject global;
-} RunJSModuleState;
 
 /* Definition of the module. */
 static struct PyModuleDef runjsmodule = {
