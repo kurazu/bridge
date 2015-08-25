@@ -241,6 +241,7 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
     printf("INIT CALL 3\n");
     JS::AutoValueVector argv(module_state->context);
     bool ok;
+
     {
         JSAutoCompartment ac(module_state->context, module_state->global);
         ok = JS_CallFunction(
@@ -254,9 +255,15 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
         PyErr_SetString(PyExc_RuntimeError, "Function call failed");
         return NULL;
     }
+    JS::RootedString str(module_state->context, rval.toString());
+    char * result_string = JS_EncodeStringToUTF8(module_state->context, str);
+    if (result_string == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "Failed to convert result to string");
+        return NULL;
+    }
     printf("INIT CALL 6\n");
     PyObject *result;
-    result = PyUnicode_FromString("DONE");
+    result = PyUnicode_FromString(result_string);
     printf("CALL END\n");
     return result;
 }
