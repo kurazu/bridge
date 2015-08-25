@@ -239,7 +239,12 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
     //JS::AutoValueVector func_args(module_state->context);
     JS::RootedValue rval(module_state->context);
     printf("INIT CALL 3\n");
+    JS::Value arguments[2];
+    arguments[0] = INT_TO_JSVAL(2);
+    arguments[1] = INT_TO_JSVAL(3);
     JS::AutoValueVector argv(module_state->context);
+    argv.append(INT_TO_JSVAL(2));
+    argv.append(INT_TO_JSVAL(3));
     bool ok;
 
     {
@@ -249,19 +254,52 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
             argv, &rval
         );
     }
-    printf("INIT CALL 4\n");
+    printf("CALL 4\n");
     if (!ok) {
-        printf("INIT CALL 5\n");
+        printf("CALL 5\n");
         PyErr_SetString(PyExc_RuntimeError, "Function call failed");
         return NULL;
     }
-    JS::RootedString str(module_state->context, rval.toString());
+    printf("CALL 6\n");
+    JS::RootedValue json(module_state->context);
+    printf("CALL 7\n");
+    ok = JS_GetProperty(module_state->context, module_state->global, "JSON", &json);
+    printf("CALL 8\n");
+    if (!ok) {
+        printf("CALL 9\n");
+        PyErr_SetString(PyExc_RuntimeError, "Get JSON failed");
+        return NULL;
+    }
+    printf("CALL 10\n");
+    JS::RootedObject json_object(module_state->context, &json.toObject());
+    printf("CALL 11\n");
+    JS::AutoValueVector stringify_args(module_state->context);
+    printf("CALL 12\n");
+    stringify_args.append(rval);
+    printf("CALL 13\n");
+    JS::RootedValue stringify_result(module_state->context);
+    printf("CALL 14\n");
+    {
+        JSAutoCompartment ac2(module_state->context, module_state->global);
+        ok = JS_CallFunctionName(module_state->context, json_object, "stringify", stringify_args, &stringify_result);
+    }
+    printf("CALL 15\n");
+    if (!ok) {
+        printf("CALL 16\n");
+        PyErr_SetString(PyExc_RuntimeError, "Failed to convert to JSON");
+        return NULL;
+    }
+    printf("CALL 17\n");
+    JS::RootedString str(module_state->context, stringify_result.toString());
+    printf("CALL 18\n");
     char * result_string = JS_EncodeStringToUTF8(module_state->context, str);
+    printf("CALL 19\n");
     if (result_string == NULL) {
+        printf("CALL 20\n");
         PyErr_SetString(PyExc_RuntimeError, "Failed to convert result to string");
         return NULL;
     }
-    printf("INIT CALL 6\n");
+    printf("CALL 21\n");
     PyObject *result;
     result = PyUnicode_FromString(result_string);
     printf("CALL END\n");
