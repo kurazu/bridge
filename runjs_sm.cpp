@@ -96,18 +96,24 @@ extern "C" {
 #include <Python.h>
 #include <structmember.h>
 
+const char * runjs_module_name = "runjs";
+
 typedef struct {
     PyObject_HEAD
     /* Type-specific fields go here. */
-    JSFunction *js_func;
+    JS::RootedFunction js_func;
 } JSFunc;
 
 static void
 JSFunc_dealloc(JSFunc* self)
 {
-    delete self->js_func;
-    self->js_func = nullptr;
+    printf("DEALLOC START\n");
+    //delete self->js_func;
+    printf("DEALLOC REF\n");
+    //self->js_func = nullptr;
+    printf("DEALLOC ZERO\n");
     Py_TYPE(self)->tp_free((PyObject*)self);
+    printf("DEALLOC DONE\n");
 }
 
 static PyObject *
@@ -126,6 +132,60 @@ JSFunc_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds)
 {
+    printf("INIT 1\n");
+    PyObject* module = PyImport_ImportModule(runjs_module_name);
+    if (!module) {
+        return -1;
+    }
+    printf("INIT 2\n");
+    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+    printf("INIT 3\n");
+    const char * function_name = "add";
+    const char * code = "return JSON.stringify(a + b)";
+    unsigned nargs = 2;
+
+    bool ok;
+    {
+      JSAutoRequest ar(module_state->context);
+      JSAutoCompartment ac(module_state->context, module_state->global);
+      JS_InitStandardClasses(module_state->context, module_state->global);
+
+        JS::AutoObjectVector emptyScopeChain(module_state->context);
+        printf("INIT 4\n");
+        const char *argnames[2] = {"a", "b"};
+        printf("INIT 5\n\n\n\n");
+        JS::CompileOptions compile_options(module_state->context);
+        printf("INIT 6\n");
+        compile_options.setFileAndLine("python", 0);
+        printf("INIT 7\n");
+        JS::RootedFunction fun(module_state->context);
+        printf("INIT 8\n");
+        ok = JS::CompileFunction(
+            module_state->context,
+            emptyScopeChain,
+            compile_options,
+            function_name,
+            nargs,
+            argnames,
+            code,
+            strlen(code),
+            &fun
+        );
+        printf("INIT 9\n");
+        if (!ok) {
+            printf("INIT 9a\n");
+            PyErr_SetString(PyExc_RuntimeError, "Failed to compile");
+            Py_XDECREF(module);
+            return -1;
+        }
+        printf("INIT 10\n");
+        self->js_func = fun;
+        printf("INIT 11\n");
+        Py_XDECREF(module);
+        printf("INIT 12\n");
+    }
+    printf("INIT 13\n");
+
     // PyObject *first=NULL, *last=NULL, *tmp;
 
     // static char *kwlist[] = {"first", "last", "number", NULL};
@@ -152,17 +212,52 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-
 static PyMemberDef JSFunc_members[] = {
     {NULL}  /* Sentinel */
 };
 
+void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
+     fprintf(stderr, "%s:%u:%s\n",
+             report->filename ? report->filename : "[no filename]",
+             (unsigned int) report->lineno,
+             message);
+}
+
 static PyObject *
 JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds)
 {
+    printf("CALL\n");
     JSFunc * self = (JSFunc*) _self;
+
+    PyObject* module = PyImport_ImportModule(runjs_module_name);
+    if (!module) {
+        return NULL;
+    }
+    printf("INIT CALL 1\n");
+    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+    printf("INIT CALL 2\n");
+    //JS::AutoValueVector func_args(module_state->context);
+    JS::RootedValue rval(module_state->context);
+    printf("INIT CALL 3\n");
+    JS::AutoValueVector argv(module_state->context);
+    bool ok;
+    {
+        JSAutoCompartment ac(module_state->context, module_state->global);
+        ok = JS_CallFunction(
+            module_state->context, JS::NullPtr(), self->js_func,
+            argv, &rval
+        );
+    }
+    printf("INIT CALL 4\n");
+    if (!ok) {
+        printf("INIT CALL 5\n");
+        PyErr_SetString(PyExc_RuntimeError, "Function call failed");
+        return NULL;
+    }
+    printf("INIT CALL 6\n");
     PyObject *result;
-    result = PyUnicode_FromString("");
+    result = PyUnicode_FromString("DONE");
+    printf("CALL END\n");
     return result;
 }
 
@@ -211,9 +306,21 @@ static PyTypeObject JSFuncType = {
     JSFunc_new,                /* tp_new */
 };
 
+void runjs_free(void * module_obj) {
+    printf("runjs_free %p\n", module_obj);
+    PyObject * module = (PyObject*) module_obj;
+    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+    JS_DestroyContext(module_state->context);
+    module_state->context = NULL;
+    JS_DestroyRuntime(module_state->runtime);
+    module_state->runtime = NULL;
+    JS_ShutDown();
+    printf("runjs_freed\n");
+}
+
 static struct PyModuleDef runjsmodule = {
    PyModuleDef_HEAD_INIT,
-   "runjs", /* name of module */
+   runjs_module_name, /* name of module */
    "Module for executing JavaScript", /* module documentation, may be NULL */
    sizeof(RunJSModuleState), /* size of per-interpreter state of the module,
           or -1 if the module keeps state in global variables. */
@@ -221,8 +328,10 @@ static struct PyModuleDef runjsmodule = {
    NULL, /* m_reload */
    NULL, /* m_traverse */
    NULL, /* m_clear */
-   NULL, /* m_free */
+   runjs_free, /* m_free */
 };
+
+
 
 PyMODINIT_FUNC
 PyInit_runjs(void)
@@ -242,6 +351,8 @@ PyInit_runjs(void)
     printf("2\n");
     RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
     printf("3\n");
+    printf("init mod %p\n", module);
+    printf("init state %p\n", module_state);
 
     printf("0\n");
     JS_Init();
@@ -263,6 +374,10 @@ PyInit_runjs(void)
         return NULL;
     }
     module_state->context = context;
+
+    JS_SetErrorReporter(runtime, reportError);
+
+    JSAutoRequest ar(context);
 
     JS::RootedObject global(context, JS_NewGlobalObject(context, &global_class, nullptr, JS::FireOnNewGlobalHook));
     if (!global) {
