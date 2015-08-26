@@ -15,8 +15,6 @@ compile_js_func(
 ) {
     bool ok;
 
-    // TODO
-    JSAutoRequest ar(module_state->context);
     JSAutoCompartment ac(module_state->context, module_state->global);
 
     JS::AutoObjectVector empty_scope_chain(module_state->context);
@@ -68,7 +66,7 @@ array_to_vector(
         throw "Length is not a number";
     }
 
-    int32_t length = length_value.toInt32();
+    const int32_t length = length_value.toInt32();
 
     for (int32_t i = 0; i < length; i++) {
         JS::RootedValue element(module_state->context);
