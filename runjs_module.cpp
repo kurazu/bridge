@@ -24,14 +24,6 @@ struct PyModuleDef runjsmodule = {
    runjs_free, /* m_free */
 };
 
-//TODO
-// void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
-//      fprintf(stderr, "%s:%u:%s\n",
-//              report->filename ? report->filename : "[no filename]",
-//              (unsigned int) report->lineno,
-//              message);
-// }
-
 PyMODINIT_FUNC
 PyInit_runjs(void)
 {

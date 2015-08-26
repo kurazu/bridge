@@ -162,6 +162,14 @@ run_js_func(
     return result_cstring;
 }
 
+//TODO
+// void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
+//      fprintf(stderr, "%s:%u:%s\n",
+//              report->filename ? report->filename : "[no filename]",
+//              (unsigned int) report->lineno,
+//              message);
+// }
+
 /* Initialize Spider Monkey JS engine and populate given module state struct */
 void
 initialize_sm(RunJSModuleState * module_state) {
@@ -178,6 +186,10 @@ initialize_sm(RunJSModuleState * module_state) {
     }
     module_state->context = context;
 
+    JSErrorReporter error_reporter = [](JSContext *cx, const char *message, JSErrorReport *report) -> void {
+        printf("ERROR!\n");
+    };
+    JS_SetErrorReporter(runtime, error_reporter);
     // TODO
     // JS_SetErrorReporter(runtime, reportError);
 

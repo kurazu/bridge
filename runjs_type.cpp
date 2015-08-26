@@ -26,7 +26,8 @@ JSFunc_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 static int
 JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwargs) {
     static char *kwlist[] = {
-        "name", "file_name", "line_no", "arg_names", "code", NULL
+        (char *)"name", (char *)"file_name", (char * )"line_no",
+        (char *)"arg_names", (char *)"code", NULL
     };
     const char * function_name;
     const char * file_name;
@@ -80,12 +81,13 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwargs) {
     }
     Py_XDECREF(module);
     delete [] c_arg_names;
+    c_arg_names = NULL;
     return return_value;
 }
 
 static PyObject *
 JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwargs) {
-    static char *kwlist[] = {"arguments_json", NULL};
+    static char *kwlist[] = {(char *)"arguments_json", NULL};
     const char * arguments_json_cstring;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &arguments_json_cstring)) {
