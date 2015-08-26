@@ -5,7 +5,7 @@ typedef struct {
     // Required header fields
     PyObject_HEAD
     // The pointer to a compiled SpiderMonkey Function object.
-    JS::MutableHandleFunction js_func;
+    JS::RootedFunction js_func;
 } JSFunc;
 
 static void
@@ -39,18 +39,19 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
     const char * code = "return JSON.stringify(a + b)";
     const unsigned nargs = 2;
     const char *argnames[2] = {"a", "b"};
+    JS::RootedFunction compiled_function(module_state->context);
     try {
-        JS::HandleFunction compiled_function = compile_js_func(
+        compile_js_func(
             module_state, function_name, file_name, line_no,
-            nargs, argnames, code
+            nargs, argnames, code, &compiled_function
         );
-        self->js_func.set(compiled_function);
     } catch (const char * err_msg) {
         // TODO set exception info
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         Py_XDECREF(module);
         return -1;
     }
+    self->js_func = compiled_function;
     Py_XDECREF(module);
     return 0;
 }

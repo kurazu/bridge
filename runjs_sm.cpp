@@ -6,12 +6,12 @@ JSClass global_class = {
     JSCLASS_GLOBAL_FLAGS
 };
 
-JS::HandleFunction
+void
 compile_js_func(
     const RunJSModuleState * module_state,
     const char * function_name, const char * file_name, const int line_no,
     const unsigned arg_count, const char *argnames[],
-    const char * code
+    const char * code, JS::MutableHandleFunction compiled_function
 ) {
     bool ok;
 
@@ -22,7 +22,6 @@ compile_js_func(
     JS::AutoObjectVector empty_scope_chain(module_state->context);
     JS::CompileOptions compile_options(module_state->context);
     compile_options.setFileAndLine(file_name, line_no);
-    JS::RootedFunction compiled_function(module_state->context);
     ok = JS::CompileFunction(
         module_state->context,
         empty_scope_chain,
@@ -32,13 +31,12 @@ compile_js_func(
         argnames,
         code,
         strlen(code),
-        &compiled_function
+        compiled_function
     );
 
     if (!ok) {
         throw "Failed to compile";
     }
-    return compiled_function;
 }
 
 static JS::HandleValueArray
@@ -175,7 +173,6 @@ initialize_sm(RunJSModuleState * module_state) {
     // JS_SetErrorReporter(runtime, reportError);
 
     // TODO
-    JSAutoRequest ar(context);
 
     JS::RootedObject global(context, JS_NewGlobalObject(
         context, &global_class, nullptr, JS::FireOnNewGlobalHook
@@ -185,6 +182,7 @@ initialize_sm(RunJSModuleState * module_state) {
     }
     module_state->global = global;
 
+    JSAutoCompartment ac(module_state->context, module_state->global);
     bool ok = JS_InitStandardClasses(module_state->context, module_state->global);
     if (!ok) {
         throw "Failed to initialize standard JS classes";
@@ -194,6 +192,7 @@ initialize_sm(RunJSModuleState * module_state) {
 /* Shutdown Spider Monkey JS engine */
 void
 shutdown_sm(RunJSModuleState * module_state) {
+    module_state->global.set(NULL);
     JS_DestroyContext(module_state->context);
     module_state->context = NULL;
     JS_DestroyRuntime(module_state->runtime);
