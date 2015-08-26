@@ -2,7 +2,7 @@ build:
 	python3 setup.py build
 
 run:
-	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/boost/lib/:/home/kurazu/apps/v8/out/x64.release/lib.target LD_DEBUG=all LD_DEBUG_OUTPUT=/tmp/ld.log python3 -c "import runjs"
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib PYTHONPATH=/home/kurazu/workspace/bridge python3 ../../bridge.py
 
 clean:
 	rm -rf ./build
@@ -20,7 +20,7 @@ runsm: build
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3 -c "import runjs; f = runjs.JSFunc(name='f', file_name='make.py', line_no=3, arg_names=('a', 'b'), code='var sum = a + b; return sum;'); print(f('[2, 3]'))"
 
 shell:
-	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib PYTHONPATH=/home/kurazu/workspace/bridge python3
 
 gdb:
 	echo "import runjs; f = runjs.JSFunc(); print(f())"

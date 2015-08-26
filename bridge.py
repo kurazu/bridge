@@ -1,6 +1,6 @@
 import json
 import inspect
-
+import functools
 import runjs
 
 
@@ -23,12 +23,18 @@ def js_func(func):
         raise ValueError("Couldn't determine line number")
 
     compiled_function = runjs.JSFunc(
-        name, arg_names, content, file_name, line_no
+        name=name, file_name=file_name, line_no=line_no, arg_names=arg_names,
+        code=content
     )
 
+    @functools.wraps(func)
     def js_func_wrapper(*args, **kwargs):
-        args = inspect.getcallargs(func, *args, **kwargs)
-        json_args = json.dumps(args)
+        call_args = inspect.getcallargs(func, *args, **kwargs)
+        call_args_positional = [
+            call_args[arg_name]
+            for arg_name in arg_names
+        ]
+        json_args = json.dumps(call_args_positional)
         json_response = compiled_function(json_args)
         return json.loads(json_response)
 
@@ -40,4 +46,10 @@ def funcb(a, b=2):
     """
     var sum = a + b;
     return sum;
+    """
+
+@js_func
+def funcbad(a, b=2):
+    """
+    return c + b;
     """
