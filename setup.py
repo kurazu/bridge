@@ -3,7 +3,7 @@ from distutils.core import setup, Extension
 
 runjs = Extension(
     'runjs',
-    sources=['runjs.cpp'],
+    sources=['runjs_sm.cpp', 'runjs_type.cpp', 'runjs_module.cpp'],
     include_dirs=[
         '/home/kurazu/apps/spider_monkey/include/mozjs-'
     ],

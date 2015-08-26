@@ -1,7 +1,7 @@
-build: setup.py runjs.cpp
+build:
 	python3 setup.py build
 
-run: build
+run:
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/boost/lib/:/home/kurazu/apps/v8/out/x64.release/lib.target LD_DEBUG=all LD_DEBUG_OUTPUT=/tmp/ld.log python3 -c "import runjs"
 
 clean:
