@@ -24,7 +24,41 @@ JSFunc_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 static int
-JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
+JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwargs) {
+    static char *kwlist[] = {
+        "name", "file_name", "line_no", "arg_names", "code", NULL
+    };
+    const char * function_name;
+    const char * file_name;
+    int line_no;
+    PyObject * arg_names;
+    const char * code;
+    Py_ssize_t arg_count;
+
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwargs, "ssiOs", kwlist,
+        &function_name, &file_name, &line_no, &arg_names, &code
+    )) {
+        return -1;
+    }
+
+    if (!PySequence_Check(arg_names)) {
+        PyErr_SetString(PyExc_ValueError, "arg_names param needs to be a list");
+        return -1;
+    }
+    arg_count = PySequence_Size(arg_names);
+    const char ** c_arg_names = new const char*[arg_count];
+    for (Py_ssize_t i = 0; i < arg_count; i++) {
+        PyObject * element = PySequence_GetItem(arg_names, i);
+        if (!PyUnicode_Check(element)) {
+            PyErr_SetString(PyExc_ValueError, "arg_names must contain str instances");
+            return -1;
+        }
+        c_arg_names[i] = PyUnicode_AsUTF8(element);
+    }
+    // TODO
+    const unsigned nargs = arg_count;
+
     PyObject* module = PyImport_ImportModule(runjs_module_name);
     if (!module) {
         return -1;
@@ -32,28 +66,21 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
 
     RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
 
-    // TODO
-    const char * function_name = "add";
-    const char * file_name = "js.py";
-    const int line_no = 17;
-    const char * code = "return JSON.stringify(a + b)";
-    const unsigned nargs = 2;
-    const char *argnames[2] = {"a", "b"};
     JS::RootedFunction compiled_function(module_state->context);
+    int return_value = 0;
     try {
         compile_js_func(
             module_state, function_name, file_name, line_no,
-            nargs, argnames, code, &compiled_function
+            nargs, c_arg_names, code, &compiled_function
         );
+        self->js_func = compiled_function;
     } catch (const char * err_msg) {
-        // TODO set exception info
+        return_value = -1;
         PyErr_SetString(PyExc_RuntimeError, err_msg);
-        Py_XDECREF(module);
-        return -1;
     }
-    self->js_func = compiled_function;
     Py_XDECREF(module);
-    return 0;
+    delete c_arg_names;
+    return return_value;
 }
 
 static PyObject *
