@@ -79,7 +79,7 @@ const char *
 run_js_func(
     const RunJSModuleState * module_state,
     JS::HandleFunction js_func,
-    const int arg_count, const char * arguments_json_cstring
+    const unsigned arg_count, const char * arguments_json_cstring
 ) {
     bool ok;
 

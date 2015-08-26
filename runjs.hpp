@@ -17,8 +17,8 @@ typedef struct {
 } RunJSModuleState;
 
 /* Function to compile JS code for later reuse. */
-JS::HandleFunction compile_js_func(
-    RunJSModuleState * module_state,
+extern JS::HandleFunction compile_js_func(
+    const RunJSModuleState * module_state,
     const char * function_name, const char * file_name, const int line_no,
     const unsigned arg_count, const char *argnames[],
     const char * code
@@ -26,17 +26,17 @@ JS::HandleFunction compile_js_func(
 
 /* Function for executing JS function, getting JSON string as input
  * and returning JSON string as output. */
-const char * run_js_func(
-    RunJSModuleState * module_state,
+extern const char * run_js_func(
+    const RunJSModuleState * module_state,
     JS::HandleFunction js_func,
     const unsigned arg_count, const char * arguments_json_cstring
 );
 
 /* Initialize Spider Monkey JS engine and populate given module state struct */
-void initialize_sm(RunJSModuleState * module_state);
+extern void initialize_sm(RunJSModuleState * module_state);
 
 /* Shutdown Spider Monkey JS engine */
-void shutdown_sm(RunJSModuleState * module_state);
+extern void shutdown_sm(RunJSModuleState * module_state);
 
 /*****************************************************************************
  * Python related symbols.                                                   *
