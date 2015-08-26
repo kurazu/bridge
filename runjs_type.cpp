@@ -5,11 +5,12 @@ typedef struct {
     // Required header fields
     PyObject_HEAD
     // The pointer to a compiled SpiderMonkey Function object.
-    JS::HandleFunction js_func;
+    JS::MutableHandleFunction js_func;
 } JSFunc;
 
 static void
 JSFunc_dealloc(JSFunc* self) {
+    self->js_func.set(NULL);
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
@@ -18,9 +19,6 @@ JSFunc_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     JSFunc *self;
 
     self = (JSFunc *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->js_func = nullptr;
-    }
 
     return (PyObject *)self;
 }
@@ -41,12 +39,12 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
     const char * code = "return JSON.stringify(a + b)";
     const unsigned nargs = 2;
     const char *argnames[2] = {"a", "b"};
-    JS::HandleFunction compiled_function;
     try {
-        compiled_function = compile_js_func(
+        JS::HandleFunction compiled_function = compile_js_func(
             module_state, function_name, file_name, line_no,
             nargs, argnames, code
         );
+        self->js_func.set(compiled_function);
     } catch (const char * err_msg) {
         // TODO set exception info
         PyErr_SetString(PyExc_RuntimeError, err_msg);
@@ -54,7 +52,6 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
         return -1;
     }
     Py_XDECREF(module);
-    self->js_func = compiled_function;
     return 0;
 }
 
