@@ -57,9 +57,13 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
 }
 
 static PyObject *
-JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds) {
-    // TODO
-    const char * arguments_json_cstring = "[2, 3]";
+JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwargs) {
+    static char *kwlist[] = {"arguments_json", NULL};
+    const char * arguments_json_cstring;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s", kwlist, &arguments_json_cstring)) {
+        return NULL;
+    }
 
     JSFunc * self = (JSFunc*) _self;
 

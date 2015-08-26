@@ -3,31 +3,28 @@ import inspect
 
 import runjs
 
-print(runjs.run("2 + 3"))
-
-"""
-function funca(json_params) {
-    var params, result;
-
-    params = JSON.parse(json_params);
-    result = (function(a, b) {
-        return a + b;
-    })(params.a, params.b);
-
-    return JSON.stringify(result);
-}
-"""
-
 
 def js_func(func):
-    content = func.__doc__.strip()
+    content = inspect.getdoc(func)
     name = func.__name__
     arg_spec = inspect.getargspec(func)
     assert arg_spec.varargs is None
     assert arg_spec.keywords is None
     arg_names = arg_spec.args
+    file_name = inspect.getsourcefile(func)
+    source_lines, first_line_no = inspect.getsourcelines(func)
+    first_content_line = content.split('\n')[0]
+    first_line_no = func.__code__.co_firstlineno
+    for idx, source_line in enumerate(source_lines):
+        if first_content_line in source_line:
+            line_no = first_line_no + idx
+            break
+    else:
+        raise ValueError("Couldn't determine line number")
 
-    compiled_function = runjs.JSFunc(name, arg_names, content)
+    compiled_function = runjs.JSFunc(
+        name, arg_names, content, file_name, line_no
+    )
 
     def js_func_wrapper(*args, **kwargs):
         args = inspect.getcallargs(func, *args, **kwargs)
@@ -41,5 +38,6 @@ def js_func(func):
 @js_func
 def funcb(a, b=2):
     """
-    return a + b;
+    var sum = a + b;
+    return sum;
     """
