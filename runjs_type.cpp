@@ -79,7 +79,7 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwargs) {
         PyErr_SetString(PyExc_RuntimeError, err_msg);
     }
     Py_XDECREF(module);
-    delete c_arg_names;
+    delete [] c_arg_names;
     return return_value;
 }
 
