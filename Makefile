@@ -21,3 +21,7 @@ runsm: build
 
 shell:
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib python3
+
+gdb:
+	echo "import runjs; f = runjs.JSFunc(); print(f())"
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib gdb python3
