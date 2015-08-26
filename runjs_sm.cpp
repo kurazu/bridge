@@ -6,7 +6,7 @@ JSClass global_class = {
     JSCLASS_GLOBAL_FLAGS
 };
 
-JS::RootedFunction
+JS::HandleFunction
 compile_js_func(
     const RunJSModuleState * module_state,
     const char * function_name, const char * file_name, const int line_no,
@@ -41,10 +41,10 @@ compile_js_func(
     return compiled_function;
 }
 
-static JS::AutoValueVector
+static JS::HandleValueArray
 array_to_vector(
     const RunJSModuleState * module_state,
-    const unsigned arg_count, JS::RootedValue array_value
+    const unsigned arg_count, JS::HandleValue array_value
 ) {
 
     if (!array_value.isObject()) {
@@ -78,7 +78,7 @@ array_to_vector(
 const char *
 run_js_func(
     const RunJSModuleState * module_state,
-    JS::RootedFunction js_func,
+    JS::HandleFunction js_func,
     const int arg_count, const char * arguments_json_cstring
 ) {
     bool ok;
@@ -117,7 +117,7 @@ run_js_func(
         throw "Failed to parse arguments JSON";
     }
     // TODO arg_count should be take from the array
-    JS::AutoValueVector arguments = array_to_vector(module_state, arg_count, parse_result);
+    JS::HandleValueArray arguments = array_to_vector(module_state, arg_count, parse_result);
 
     JS::RootedValue result(module_state->context);
     ok = JS_CallFunction(

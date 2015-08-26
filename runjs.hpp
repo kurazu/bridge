@@ -17,7 +17,7 @@ typedef struct {
 } RunJSModuleState;
 
 /* Function to compile JS code for later reuse. */
-JS::RootedFunction compile_js_func(
+JS::HandleFunction compile_js_func(
     RunJSModuleState * module_state,
     const char * function_name, const char * file_name, const int line_no,
     const unsigned arg_count, const char *argnames[],
@@ -28,7 +28,7 @@ JS::RootedFunction compile_js_func(
  * and returning JSON string as output. */
 const char * run_js_func(
     RunJSModuleState * module_state,
-    JS::RootedFunction js_func,
+    JS::HandleFunction js_func,
     const unsigned arg_count, const char * arguments_json_cstring
 );
 

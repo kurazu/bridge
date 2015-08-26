@@ -1,11 +1,11 @@
 #include "runjs.hpp"
 
 /* Structure of JSFunc Python objects */
-static typedef struct {
+typedef struct {
     // Required header fields
     PyObject_HEAD
     // The pointer to a compiled SpiderMonkey Function object.
-    JS::RootedFunction js_func;
+    JS::HandleFunction js_func;
 } JSFunc;
 
 static void
@@ -42,7 +42,7 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
     const unsigned nargs = 2;
     const char *argnames[2] = {"a", "b"};
     try {
-        JS::RootedFunction compiled_function = compile_js_func(
+        JS::HandleFunction compiled_function = compile_js_func(
             module_state, function_name, file_name, line_no,
             nargs, argnames, code
         );
@@ -76,13 +76,13 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds) {
     try {
         result_cstring = run_js_func(
             module_state, self->js_func, arg_count, arguments_json_cstring
-        )
+        );
     } catch (const char * err_msg) {
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
     }
 
-    PyObject *result = PyUnicode_FromString(result_string);
+    PyObject *result = PyUnicode_FromString(result_cstring);
     delete result_cstring;
     return result;
 }
