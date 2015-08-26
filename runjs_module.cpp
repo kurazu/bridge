@@ -1,8 +1,5 @@
 #include "runjs.hpp"
 
-/* The name of the module */
-const char * runjs_module_name = "runjs";
-
 /* Definition of the module. */
 struct PyModuleDef runjsmodule = {
    PyModuleDef_HEAD_INIT,

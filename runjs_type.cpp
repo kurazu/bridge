@@ -36,13 +36,14 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwds) {
 
     // TODO
     const char * function_name = "add";
-    const char * file_name = "js.py"
+    const char * file_name = "js.py";
     const int line_no = 17;
     const char * code = "return JSON.stringify(a + b)";
     const unsigned nargs = 2;
     const char *argnames[2] = {"a", "b"};
+    JS::HandleFunction compiled_function;
     try {
-        JS::HandleFunction compiled_function = compile_js_func(
+        compiled_function = compile_js_func(
             module_state, function_name, file_name, line_no,
             nargs, argnames, code
         );

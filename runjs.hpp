@@ -42,6 +42,10 @@ void shutdown_sm(RunJSModuleState * module_state);
  * Python related symbols.                                                   *
  *****************************************************************************/
 
+/* The name of the module */
+const char * runjs_module_name = "runjs";
+
+/* Definition of the JSFunc type */
 PyTypeObject JSFuncType;
 
 #endif // !defined( RUNJS_H )
