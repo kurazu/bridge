@@ -41,9 +41,9 @@ compile_js_func(
 
 static JS::HandleValueArray
 array_to_vector(
-    const RunJSModuleState * module_state,
-    const unsigned arg_count, JS::HandleValue array_value
+    const RunJSModuleState * module_state, JS::HandleValue array_value
 ) {
+    bool ok;
 
     if (!array_value.isObject()) {
         throw "Expected parameter to be object";
@@ -57,11 +57,24 @@ array_to_vector(
 
     JS::AutoValueVector result(module_state->context);
 
-    for (unsigned i = 0; i < arg_count; i++) {
+    JS::RootedValue length_value(module_state->context);
+
+    ok = JS_GetProperty(module_state->context, array_object, "length", &length_value);
+    if (!ok) {
+        throw "Couldn't get length";
+    }
+
+    if (!length_value.isNumber()) {
+        throw "Length is not a number";
+    }
+
+    int32_t length = length_value.toInt32();
+
+    for (int32_t i = 0; i < length; i++) {
         JS::RootedValue element(module_state->context);
         std::string key_string = std::to_string(i);
         const char * key_cstring = key_string.c_str();
-        bool ok = JS_GetProperty(
+        ok = JS_GetProperty(
             module_state->context, array_object, key_cstring, &element
         );
         if (!ok) {
@@ -76,8 +89,7 @@ array_to_vector(
 const char *
 run_js_func(
     const RunJSModuleState * module_state,
-    JS::HandleFunction js_func,
-    const unsigned arg_count, const char * arguments_json_cstring
+    JS::HandleFunction js_func, const char * arguments_json_cstring
 ) {
     bool ok;
 
@@ -114,8 +126,7 @@ run_js_func(
     if (!ok) {
         throw "Failed to parse arguments JSON";
     }
-    // TODO arg_count should be take from the array
-    JS::HandleValueArray arguments = array_to_vector(module_state, arg_count, parse_result);
+    JS::HandleValueArray arguments = array_to_vector(module_state, parse_result);
 
     JS::RootedValue result(module_state->context);
     ok = JS_CallFunction(

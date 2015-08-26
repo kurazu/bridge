@@ -60,7 +60,6 @@ static PyObject *
 JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds) {
     // TODO
     const char * arguments_json_cstring = "[2, 3]";
-    const unsigned arg_count = 2;
 
     JSFunc * self = (JSFunc*) _self;
 
@@ -74,7 +73,7 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwds) {
     const char * result_cstring;
     try {
         result_cstring = run_js_func(
-            module_state, self->js_func, arg_count, arguments_json_cstring
+            module_state, self->js_func, arguments_json_cstring
         );
     } catch (const char * err_msg) {
         PyErr_SetString(PyExc_RuntimeError, err_msg);

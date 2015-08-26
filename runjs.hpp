@@ -28,8 +28,7 @@ extern void compile_js_func(
  * and returning JSON string as output. */
 extern const char * run_js_func(
     const RunJSModuleState * module_state,
-    JS::HandleFunction js_func,
-    const unsigned arg_count, const char * arguments_json_cstring
+    JS::HandleFunction js_func, const char * arguments_json_cstring
 );
 
 /* Initialize Spider Monkey JS engine and populate given module state struct */
