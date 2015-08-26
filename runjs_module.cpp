@@ -1,5 +1,15 @@
 #include "runjs.hpp"
 
+/* The name of the module */
+const char * runjs_module_name = "runjs";
+
+void runjs_free(void * module_obj) {
+    PyObject * module = (PyObject*) module_obj;
+    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
+
+    shutdown_sm(module_state);
+}
+
 /* Definition of the module. */
 struct PyModuleDef runjsmodule = {
    PyModuleDef_HEAD_INIT,
@@ -13,13 +23,6 @@ struct PyModuleDef runjsmodule = {
    NULL, /* m_clear */
    runjs_free, /* m_free */
 };
-
-void runjs_free(void * module_obj) {
-    PyObject * module = (PyObject*) module_obj;
-    RunJSModuleState* module_state = (RunJSModuleState*) PyModule_GetState(module);
-
-    shutdown_sm(module_state);
-}
 
 //TODO
 // void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
@@ -48,7 +51,7 @@ PyInit_runjs(void)
 
     try {
         initialize_sm(module_state);
-    catch (const char * err_msg) {
+    } catch (const char * err_msg) {
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
     }

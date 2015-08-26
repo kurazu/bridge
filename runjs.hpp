@@ -1,4 +1,4 @@
-#if !defined( RUNJS_H )
+#ifndef RUNJS_H
 #define RUNJS_H
 
 #include "jsapi.h"
@@ -43,9 +43,9 @@ void shutdown_sm(RunJSModuleState * module_state);
  *****************************************************************************/
 
 /* The name of the module */
-const char * runjs_module_name = "runjs";
+extern const char * runjs_module_name;
 
 /* Definition of the JSFunc type */
-PyTypeObject JSFuncType;
+extern PyTypeObject JSFuncType;
 
 #endif // !defined( RUNJS_H )
