@@ -10,7 +10,7 @@
  * Spider-monkey related symbols.                                            *
  *****************************************************************************/
 
-static typedef struct {
+typedef struct {
     JSRuntime * runtime;
     JSContext * context;
     JS::RootedObject global;
@@ -29,7 +29,7 @@ JS::RootedFunction compile_js_func(
 const char * run_js_func(
     RunJSModuleState * module_state,
     JS::RootedFunction js_func,
-    const int arg_count, const char * arguments_json_cstring
+    const unsigned arg_count, const char * arguments_json_cstring
 );
 
 /* Initialize Spider Monkey JS engine and populate given module state struct */

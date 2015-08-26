@@ -6,7 +6,7 @@ JSClass global_class = {
     JSCLASS_GLOBAL_FLAGS
 };
 
-static JS::RootedFunction
+JS::RootedFunction
 compile_js_func(
     const RunJSModuleState * module_state,
     const char * function_name, const char * file_name, const int line_no,
@@ -43,7 +43,9 @@ compile_js_func(
 
 static JS::AutoValueVector
 array_to_vector(
-    const RunJSModuleState * module_state, const inst arg_count, JS::RootedValue array_value) {
+    const RunJSModuleState * module_state,
+    const unsigned arg_count, JS::RootedValue array_value
+) {
 
     if (!array_value.isObject()) {
         throw "Expected parameter to be object";
@@ -57,7 +59,7 @@ array_to_vector(
 
     JS::AutoValueVector result(module_state->context);
 
-    for (int i = 0; i < arg_count; i++) {
+    for (unsigned i = 0; i < arg_count; i++) {
         JS::RootedValue element(module_state->context);
         std::string key_string = std::to_string(i);
         const char * key_cstring = key_string.c_str();
@@ -73,8 +75,7 @@ array_to_vector(
     return result;
 }
 
-
-static const char *
+const char *
 run_js_func(
     const RunJSModuleState * module_state,
     JS::RootedFunction js_func,
@@ -192,7 +193,7 @@ initialize_sm(RunJSModuleState * module_state) {
 
 /* Shutdown Spider Monkey JS engine */
 void
-shutdown_sm(const RunJSModuleState * module_state) {
+shutdown_sm(RunJSModuleState * module_state) {
     JS_DestroyContext(module_state->context);
     module_state->context = NULL;
     JS_DestroyRuntime(module_state->runtime);
