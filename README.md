@@ -61,9 +61,12 @@ Use the ```js_func``` decorator from ```bridge``` module to convert your JavaScr
 from bridge import js_func
 
 @js_func
-def mul(a, b=2):
+def math(str):
     """
-    return a * b;
+    var sqrt = Math.sqrt;
+    return (function(arg) {
+        return sqrt(arg);
+    })(str);
     """
 ```
 
@@ -72,5 +75,22 @@ The JavaScript code is read from the function's docstring. The function itself d
 You can use your function normally (provided you only supply JSON-able parameters):
 
 ```
-assert mul(3) == 6
+assert math(9) == 3
+```
+
+Exceptions raised by JavaScript will be converted to ```RuntimeException```s. The error message should point the correct location of the JavaScript code inside your original Python source files.
+
+```
+>>> import bridge.tests
+>>> bridge.tests.runtime(2, 3)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/home/kurazu/workspace/bridge/venv/lib/python3.4/site-packages/bridge-0.1-py3.4-linux-x86_64.egg/bridge/__init__.py", line 38, in js_func_wrapper
+    json_response = compiled_function(json_args)
+RuntimeError: ReferenceError: c is not defined at /home/kurazu/workspace/bridge/venv/lib/python3.4/site-packages/bridge-0.1-py3.4-linux-x86_64.egg/bridge/tests.py:32
+```
+
+where the line 32 in ```tests.py``` was
+```
+return b + c;
 ```
