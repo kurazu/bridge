@@ -94,3 +94,5 @@ where the line 32 in ```tests.py``` was
 ```
 return b + c;
 ```
+
+See more usage examples in ```tests.py```.
