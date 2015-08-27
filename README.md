@@ -9,7 +9,7 @@ You need build tools and Python development files
 sudo apt-get install python3-dev build-essential
 ```
 
-You need to have Firefox's SpiderMonkey engine (no necessarily installed in your system, can be installed in a custom prefix). The version that is supported is FIREFOX_AURORA_38_BASE:
+You need to have Firefox's SpiderMonkey engine (no necessarily installed in your system, can be installed in a custom prefix). The version that is supported is ```FIREFOX_AURORA_38_BASE```:
 http://hg.mozilla.org/mozilla-central/rev/98086da94ccd
 
 Read instructions on installing SM at https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Build_Documentation
