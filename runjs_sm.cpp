@@ -202,7 +202,11 @@ run_js_func(
             throw "JS function call failed";
         }
     }
-
+    if (result.isUndefined()) {
+        /* Special case - undefined value cannot be serialized as JSON.
+         * We will be treating it as null, so it can be serialized. */
+        result.setNull();
+    }
     JS::AutoValueVector stringify_args(module_state->context);
     stringify_args.append(result);
     JS::RootedValue stringify_result(module_state->context);
@@ -211,13 +215,13 @@ run_js_func(
         stringify_args, &stringify_result
     );
     if (!ok) {
-        throw "Failed to convert result to JSON";
-    }
-    if (!stringify_result.isString()) {
-        throw "stringify result is not a string";
+        throw "Couldn't covert result to JSON - stringify call failed";
     }
     if (stringify_result.isNullOrUndefined()) {
-        throw "stringify result is null or undefined";
+        throw "Couldn't covert result to JSON - stringify result is null or undefined";
+    }
+    if (!stringify_result.isString()) {
+        throw "Couldn't covert result to JSON - stringify result is not a string";
     }
     JS::RootedString stringify_result_string(
         module_state->context, stringify_result.toString()
