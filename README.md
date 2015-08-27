@@ -96,3 +96,23 @@ return b + c;
 ```
 
 See more usage examples in ```tests.py```.
+
+If you need less magic and more flexibility, use ```runjs.JSFunc``` objects directly.
+
+Create a new function:
+```
+>>> import runjs
+>>> func = runjs.JSFunc(
+...     name='add', file_name='math.py', line_no=20,
+...     arg_names=('a', 'b'), code='return {result: a + b};'
+... )
+```
+
+The ```runjs.JSFunc``` object can be called, but call expects a single argument, which needs to be a ```str``` object with a JSON serialization of the array of parameters:
+
+```
+>>> func('[4, 5]')
+'{"result":9}'
+```
+
+The result of the function will always be a JSON serialization of JavaScript return value.
