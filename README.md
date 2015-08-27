@@ -50,7 +50,7 @@ python3 setup.py install
 ```
 
 ## Running
-Remember that SpiderMoneky needs to be in LD_LIBRARY_PATH when running Python:
+Remember that SpiderMoneky needs to be in ```LD_LIBRARY_PATH``` when running Python:
 ```
 LD_LIBRARY_PATH="${SPIDER_MONKEY_PREFIX}/lib:${LD_LIBRARY_PATH}" python3
 ```
