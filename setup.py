@@ -1,9 +1,9 @@
-from distutils.core import setup, Extension
+from setuptools import find_packages, setup, Extension
 
 
 runjs = Extension(
     'runjs',
-    sources=['runjs_sm.cpp', 'runjs_type.cpp', 'runjs_module.cpp'],
+    sources=['src/runjs_sm.cpp', 'src/runjs_type.cpp', 'src/runjs_module.cpp'],
     include_dirs=[
         '/home/kurazu/apps/spider_monkey/include/mozjs-'
     ],
@@ -38,6 +38,20 @@ runjs = Extension(
 setup(
     name='bridge',
     version='0.1',
+    author='Tomasz Maćkowiak',
+    author_email='kurazu@kurazu.net',
     description='This is a demo of Python - JS integration',
-    ext_modules=[runjs]
+    url='https://github.com/kurazu/bridge',
+    license='MIT',
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+    ],
+    ext_modules=[runjs],
+    packages=find_packages('src', exclude=['examples']),
+    package_dir={'':'src'},
+    include_package_data=False,
 )

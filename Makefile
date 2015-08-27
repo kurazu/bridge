@@ -25,6 +25,8 @@ runbad:
 shell:
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib PYTHONPATH=/home/kurazu/workspace/bridge python3
 
+test:
+	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib PYTHONPATH=/home/kurazu/workspace/bridge python3 -m bridge.tests
 gdb:
 	echo "import runjs; f = runjs.JSFunc(); print(f())"
 	cd /home/kurazu/workspace/bridge/build/lib.linux-x86_64-3.4 && LD_LIBRARY_PATH=.:/home/kurazu/apps/spider_monkey/lib gdb python3
