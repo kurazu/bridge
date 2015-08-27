@@ -4,7 +4,6 @@
 #include "jsapi.h"
 #include <Python.h>
 #include <structmember.h>
-#include <string>
 
 /*****************************************************************************
  * Spider-monkey related symbols.                                            *
@@ -15,6 +14,15 @@ typedef struct {
     JSContext * context;
     JS::RootedObject global;
 } RunJSModuleState;
+
+typedef struct {
+    bool occured = false;
+    const char * message = NULL;
+    const char * file_name = NULL;
+    unsigned line_no = 0;
+    void reset();
+    void set(const char * n_message, const char * n_file_name, unsigned n_line_no);
+} JSError;
 
 /* Function to compile JS code for later reuse. */
 extern void compile_js_func(

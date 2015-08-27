@@ -1,10 +1,43 @@
 #include "runjs.hpp"
+#include <cstring>
+#include <string>
+#include <sstream>
 
 /* The class of the global object. */
 JSClass global_class = {
     "global",
     JSCLASS_GLOBAL_FLAGS
 };
+
+void
+JSError::reset() {
+    occured = false;
+    if (message != NULL) {
+        delete [] message;
+    }
+    message = NULL;
+    if (file_name != NULL) {
+        delete [] file_name;
+    }
+    file_name = NULL;
+    line_no = 0;
+}
+
+static inline char *
+s_cpy(const char * str) {
+    const size_t length = std::strlen(str);
+    char * result = new char[length + 1];
+    std::strcpy(result, str);
+    return result;
+}
+
+void
+JSError::set(const char * n_message, const char * n_file_name, unsigned n_line_no) {
+    occured = true;
+    message = s_cpy(n_message);
+    file_name = s_cpy(n_file_name);
+    line_no = n_line_no;
+}
 
 void
 compile_js_func(
@@ -84,6 +117,31 @@ array_to_vector(
     return result;
 }
 
+inline static JSError *
+get_js_error(const RunJSModuleState * module_state) {
+    return (JSError *)JS_GetContextPrivate(module_state->context);
+}
+
+static void
+error_reporter(JSContext *context, const char *message, JSErrorReport *report) {
+    printf("ERROR REPORTED\n");
+    JSError * context_data = (JSError *)JS_GetContextPrivate(context);
+    context_data->set(message, report->filename, report->lineno);
+}
+
+static void
+enable_error_reporter(const RunJSModuleState * module_state) {
+    JSError * context_data = get_js_error(module_state);
+    context_data->reset();
+    JS_SetErrorReporter(module_state->runtime, error_reporter);
+}
+
+static void
+disable_error_reporter(const RunJSModuleState * module_state) {
+    JS_SetErrorReporter(module_state->runtime, NULL);
+}
+
+
 const char *
 run_js_func(
     const RunJSModuleState * module_state,
@@ -127,12 +185,21 @@ run_js_func(
     JS::HandleValueArray arguments = array_to_vector(module_state, parse_result);
 
     JS::RootedValue result(module_state->context);
+    enable_error_reporter(module_state);
     ok = JS_CallFunction(
         module_state->context, JS::NullPtr(), js_func, arguments, &result
     );
     if (!ok) {
-        throw "JS function call failed";
+        JSError * error = get_js_error(module_state);
+        if (error->occured) {
+            disable_error_reporter(module_state);
+            throw error;
+        } else {
+            disable_error_reporter(module_state);
+            throw "JS function call failed";
+        }
     }
+    disable_error_reporter(module_state);
 
     JS::AutoValueVector stringify_args(module_state->context);
     stringify_args.append(result);
@@ -162,14 +229,6 @@ run_js_func(
     return result_cstring;
 }
 
-//TODO
-// void reportError(JSContext *cx, const char *message, JSErrorReport *report) {
-//      fprintf(stderr, "%s:%u:%s\n",
-//              report->filename ? report->filename : "[no filename]",
-//              (unsigned int) report->lineno,
-//              message);
-// }
-
 /* Initialize Spider Monkey JS engine and populate given module state struct */
 void
 initialize_sm(RunJSModuleState * module_state) {
@@ -186,14 +245,9 @@ initialize_sm(RunJSModuleState * module_state) {
     }
     module_state->context = context;
 
-    JSErrorReporter error_reporter = [](JSContext *cx, const char *message, JSErrorReport *report) -> void {
-        printf("ERROR!\n");
-    };
-    JS_SetErrorReporter(runtime, error_reporter);
-    // TODO
-    // JS_SetErrorReporter(runtime, reportError);
-
-    // TODO
+    /* Allocate space for storing information about exceptions. */
+    JSError * js_error = new JSError();
+    JS_SetContextPrivate(context, (void *)js_error);
 
     JS::RootedObject global(context, JS_NewGlobalObject(
         context, &global_class, nullptr, JS::FireOnNewGlobalHook
@@ -213,6 +267,10 @@ initialize_sm(RunJSModuleState * module_state) {
 /* Shutdown Spider Monkey JS engine */
 void
 shutdown_sm(RunJSModuleState * module_state) {
+    JSError * js_error = (JSError *)JS_GetContextPrivate(module_state->context);
+    js_error->reset();
+    delete js_error;
+    JS_SetContextPrivate(module_state->context, NULL);
     module_state->global.set(NULL);
     JS_DestroyContext(module_state->context);
     module_state->context = NULL;
