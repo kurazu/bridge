@@ -1,37 +1,20 @@
+import os
 from setuptools import find_packages, setup, Extension
 
+SPIDER_MONKEY_PREFIX = os.environ.get('SPIDER_MONKEY_PREFIX', '/usr/local')
+SPIDER_MONKEY_VERSION = os.environ.get('SPIDER_MONKEY_VERSION', 'mozjs-')
 
 runjs = Extension(
     'runjs',
     sources=['src/runjs_sm.cpp', 'src/runjs_type.cpp', 'src/runjs_module.cpp'],
     include_dirs=[
-        '/home/kurazu/apps/spider_monkey/include/mozjs-'
+        os.path.join(SPIDER_MONKEY_PREFIX, 'include', SPIDER_MONKEY_VERSION)
     ],
-    # include_dirs=[
-    #     '/usr/include',
-    #     #'/home/kurazu/apps/v8',
-    #     #'/home/kurazu/apps/boost/include'
-    # ],
-    libraries=['mozjs-', 'm', 'dl'],
+    libraries=[SPIDER_MONKEY_VERSION, 'm', 'dl'],
     library_dirs=[
-        '/home/kurazu/apps/spider_monkey/lib'
+        os.path.join(SPIDER_MONKEY_PREFIX, 'lib')
     ],
-    #     '/usr/local/lib',
-    #     '/home/kurazu/apps/v8/out/native/lib.target',
-    # ],
-    # extra_compile_args=['-std=c++0x'],
-    extra_compile_args=['-std=gnu++0x', '-include', '/home/kurazu/apps/spider_monkey/include/mozjs-/js/RequiredDefines.h'],
-    # extra_objects=[
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_base.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_libbase.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_nosnapshot.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_libplatform.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicuuc.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicui18n.a',
-    #     '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicudata.a'
-    # ],
-    #extra_link_args=['-Wl,--start-group', '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_base.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_libbase.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_nosnapshot.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/tools/gyp/libv8_libplatform.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicuuc.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicui18n.a', '/home/kurazu/tmp/v8/out/x64.release/obj.target/third_party/icu/libicudata.a', '-Wl,--end-group'],
-    #extra_link_args='-Wl,--start-group /home/kurazu/tmp/v8/out/native/obj.target/tools/gyp/libv8_base.a /home/kurazu/tmp/v8/out/native/obj.target/tools/gyp/libv8_libbase.a /home/kurazu/tmp/v8/out/native/obj.target/tools/gyp/libv8_nosnapshot.a /home/kurazu/tmp/v8/out/native/obj.target/tools/gyp/libv8_libplatform.a /home/kurazu/tmp/v8/out/native/obj.target/third_party/icu/libicuuc.a /home/kurazu/tmp/v8/out/native/obj.target/third_party/icu/libicui18n.a /home/kurazu/tmp/v8/out/native/obj.target/third_party/icu/libicudata.a -Wl,--end-group -lrt -ldl'.split(' ')
+    extra_compile_args=['-std=gnu++0x'],
 )
 
 
@@ -52,6 +35,6 @@ setup(
     ],
     ext_modules=[runjs],
     packages=find_packages('src', exclude=['examples']),
-    package_dir={'':'src'},
+    package_dir={'': 'src'},
     include_package_data=False,
 )
