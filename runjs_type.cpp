@@ -78,6 +78,13 @@ JSFunc_init(JSFunc *self, PyObject *args, PyObject *kwargs) {
     } catch (const char * err_msg) {
         return_value = -1;
         PyErr_SetString(PyExc_RuntimeError, err_msg);
+    } catch (JSError * error) {
+        return_value = -1;
+        PyErr_Format(
+             PyExc_RuntimeError, "%s at %s:%u",
+             error->message, error->file_name, error->line_no
+        );
+        error->reset();
     }
     Py_XDECREF(module);
     delete [] c_arg_names;
@@ -112,13 +119,11 @@ JSFunc_call(PyObject* _self, PyObject *args, PyObject *kwargs) {
         PyErr_SetString(PyExc_RuntimeError, err_msg);
         return NULL;
     } catch (JSError * error) {
-        printf("F1\n");
         PyErr_Format(
              PyExc_RuntimeError, "%s at %s:%u",
              error->message, error->file_name, error->line_no
         );
         error->reset();
-        printf("F2\n");
         return NULL;
     }
 

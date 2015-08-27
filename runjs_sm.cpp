@@ -1,7 +1,6 @@
 #include "runjs.hpp"
 #include <cstring>
 #include <string>
-#include <sstream>
 
 /* The class of the global object. */
 JSClass global_class = {
@@ -39,6 +38,29 @@ JSError::set(const char * n_message, const char * n_file_name, unsigned n_line_n
     line_no = n_line_no;
 }
 
+inline static JSError *
+get_js_error(const RunJSModuleState * module_state) {
+    return (JSError *)JS_GetContextPrivate(module_state->context);
+}
+
+static void
+error_reporter(JSContext *context, const char *message, JSErrorReport *report) {
+    JSError * context_data = (JSError *)JS_GetContextPrivate(context);
+    context_data->set(message, report->filename, report->lineno);
+}
+
+static void
+enable_error_reporter(const RunJSModuleState * module_state) {
+    JSError * context_data = get_js_error(module_state);
+    context_data->reset();
+    JS_SetErrorReporter(module_state->runtime, error_reporter);
+}
+
+static void
+disable_error_reporter(const RunJSModuleState * module_state) {
+    JS_SetErrorReporter(module_state->runtime, NULL);
+}
+
 void
 compile_js_func(
     const RunJSModuleState * module_state,
@@ -53,6 +75,8 @@ compile_js_func(
     JS::AutoObjectVector empty_scope_chain(module_state->context);
     JS::CompileOptions compile_options(module_state->context);
     compile_options.setFileAndLine(file_name, line_no);
+
+    enable_error_reporter(module_state);
     ok = JS::CompileFunction(
         module_state->context,
         empty_scope_chain,
@@ -64,9 +88,14 @@ compile_js_func(
         strlen(code),
         compiled_function
     );
-
+    disable_error_reporter(module_state);
     if (!ok) {
-        throw "Failed to compile";
+        JSError * error = get_js_error(module_state);
+        if (error->occured) {
+            throw error;
+        } else {
+            throw "Failed to compile";
+        }
     }
 }
 
@@ -117,31 +146,6 @@ array_to_vector(
     return result;
 }
 
-inline static JSError *
-get_js_error(const RunJSModuleState * module_state) {
-    return (JSError *)JS_GetContextPrivate(module_state->context);
-}
-
-static void
-error_reporter(JSContext *context, const char *message, JSErrorReport *report) {
-    printf("ERROR REPORTED\n");
-    JSError * context_data = (JSError *)JS_GetContextPrivate(context);
-    context_data->set(message, report->filename, report->lineno);
-}
-
-static void
-enable_error_reporter(const RunJSModuleState * module_state) {
-    JSError * context_data = get_js_error(module_state);
-    context_data->reset();
-    JS_SetErrorReporter(module_state->runtime, error_reporter);
-}
-
-static void
-disable_error_reporter(const RunJSModuleState * module_state) {
-    JS_SetErrorReporter(module_state->runtime, NULL);
-}
-
-
 const char *
 run_js_func(
     const RunJSModuleState * module_state,
@@ -189,17 +193,15 @@ run_js_func(
     ok = JS_CallFunction(
         module_state->context, JS::NullPtr(), js_func, arguments, &result
     );
+    disable_error_reporter(module_state);
     if (!ok) {
         JSError * error = get_js_error(module_state);
         if (error->occured) {
-            disable_error_reporter(module_state);
             throw error;
         } else {
-            disable_error_reporter(module_state);
             throw "JS function call failed";
         }
     }
-    disable_error_reporter(module_state);
 
     JS::AutoValueVector stringify_args(module_state->context);
     stringify_args.append(result);
