@@ -30,11 +30,13 @@ make install
 ```
 
 ## Installation
+There is a ```Makefile``` provided, that contains the exact commands for building and running the package.
+
 You need to have `virtualenv` package installed on your system.
 
-Create a new virutal env and activate it.
+Create a new virtual env and activate it.
 ```
-virtualenv -p python3.4 venv
+make virtualenv
 source venv/bin/activate
 ```
 
@@ -45,14 +47,19 @@ export SPIDER_MONKEY_VERSION='mozjs-'
 ```
 Build and install the package
 ```
-python3 setup.py build
-python3 setup.py install
+make build
+make install
 ```
 
 ## Running
 Remember that SpiderMoneky needs to be in ```LD_LIBRARY_PATH``` when running Python:
 ```
-LD_LIBRARY_PATH="${SPIDER_MONKEY_PREFIX}/lib:${LD_LIBRARY_PATH}" python3
+make shell
+```
+
+To run the tests:
+```
+make test
 ```
 
 ## Usage
