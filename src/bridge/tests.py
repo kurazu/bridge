@@ -47,6 +47,16 @@ def get():
     """
 
 
+@js_func
+def math(str):
+    """
+    var sqrt = Math.sqrt;
+    return (function(arg) {
+        return sqrt(arg);
+    })(str);
+    """
+
+
 class TestJS(unittest.TestCase):
 
     def test_add(self):
@@ -84,6 +94,14 @@ class TestJS(unittest.TestCase):
         # JSON serialization of NaN is null.
         self.assertEqual(mul(8, {}), None)
 
+    def assertStartsWith(self, phrase, pattern):
+        msg = '{!r} does not start with {!r}'.format(phrase, pattern)
+        self.assertTrue(phrase.startswith(pattern), msg)
+
+    def assertEndsWith(self, phrase, pattern):
+        msg = '{!r} does not end with {!r}'.format(phrase, pattern)
+        self.assertTrue(phrase.endswith(pattern), msg)
+
     def test_syntax_errors(self):
         try:
             @js_func
@@ -94,10 +112,8 @@ class TestJS(unittest.TestCase):
                 """
         except RuntimeError as ex:
             msg, = ex.args
-            self.assertTrue(
-                msg.startswith('SyntaxError: illegal character at')
-            )
-            self.assertTrue(msg.endswith('bridge/tests.py:93'))
+            self.assertStartsWith(msg, 'SyntaxError: illegal character at')
+            self.assertEndsWith(msg, 'bridge/tests.py:111')
         else:
             self.fail('Exception not raised')
 
@@ -106,16 +122,19 @@ class TestJS(unittest.TestCase):
             runtime(5, 6)
         except RuntimeError as ex:
             msg, = ex.args
-            self.assertTrue(
-                msg.startswith('ReferenceError: c is not defined at')
-            )
-            self.assertTrue(msg.endswith('bridge/tests.py:32'))
+            self.assertStartsWith(msg, 'ReferenceError: c is not defined at')
+            self.assertEndsWith(msg, 'bridge/tests.py:32')
         else:
             self.fail('Exception not raised')
 
     def test_set_get(self):
         set(17)
         self.assertEqual(get(), 17)
+
+    def test_math(self):
+        self.assertEqual(math(4), 2.0)
+        self.assertEqual(math(9), 3.0)
+        self.assertEqual(math(12.25), 3.5)
 
 
 if __name__ == '__main__':
